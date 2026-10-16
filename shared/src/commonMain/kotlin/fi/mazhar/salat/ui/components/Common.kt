@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fi.mazhar.salat.ui.theme.NoorColors
+import fi.mazhar.salat.ui.theme.rememberArabicFontFamily
 
 @Composable
 fun SectionCard(
@@ -127,7 +128,7 @@ fun ProgressBar(
     }
 }
 
-/** Arabic script is always laid out right-to-left and given generous line height. */
+/** Arabic script is set in Amiri, always laid out right-to-left and given generous line height. */
 @Composable
 fun ArabicText(
     text: String,
@@ -146,7 +147,7 @@ fun ArabicText(
             lineHeight = fontSize * 1.9f,
             textAlign = textAlign,
             maxLines = maxLines,
-            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Serif),
+            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = rememberArabicFontFamily()),
         )
     }
 }
