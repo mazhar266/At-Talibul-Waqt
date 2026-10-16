@@ -23,6 +23,11 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "fi.mazhar.salat"
             packageVersion = "1.0.0"
+            // Generated from icons/ by tools/make_app_icons.py.
+            val iconDir = project.file("icons")
+            macOS { iconFile.set(iconDir.resolve("talibulwaqt.icns")) }
+            windows { iconFile.set(iconDir.resolve("talibulwaqt.ico")) }
+            linux { iconFile.set(iconDir.resolve("talibulwaqt.png")) }
         }
     }
 }

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#125F53"/><stop offset=".52" stop-color="#094A43"/><stop offset="1" stop-color="#062D31"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FCE2A0"/><stop offset=".5" stop-color="#DDAF5E"/><stop offset="1" stop-color="#BC813A"/></linearGradient>
+ <linearGradient id="ivory" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFF4D9"/><stop offset="1" stop-color="#F0DDAF"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#3E9280" stop-opacity=".43"/><stop offset="1" stop-color="#3E9280" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+<circle cx="512" cy="420" r="395" fill="url(#glow)"/>
+<path d="M170 783 Q512 850 854 783" fill="none" stroke="#6FA997" stroke-opacity=".25" stroke-width="3"/>
+<!-- circular time dial -->
+<circle cx="512" cy="388" r="242" fill="#063B39" fill-opacity=".55" stroke="url(#gold)" stroke-width="18"/>
+<circle cx="512" cy="388" r="213" fill="none" stroke="#E8CC8A" stroke-opacity=".23" stroke-width="3"/>
+<g stroke="#EAD39B" stroke-width="10" stroke-linecap="round">
+ <path d="M512 190v23 M512 563v23 M314 388h23 M687 388h23"/>
+</g>
+<g stroke="#EAD39B" stroke-opacity=".67" stroke-width="6" stroke-linecap="round">
+ <path d="M413 217l10 18 M611 559l-10-18 M341 289l18 10 M683 487l-18-10 M611 217l-10 18 M413 559l10-18 M683 289l-18 10 M341 487l18-10"/>
+</g>
+<!-- crescent as quiet celestial symbol -->
+<path d="M557 248 A99 99 0 1 0 630 390 A110 110 0 1 1 557 248Z" fill="url(#gold)" opacity=".95"/>
+<!-- prominent clock hands -->
+<path d="M512 388 L512 280" stroke="#FFF1D1" stroke-width="17" stroke-linecap="round"/>
+<path d="M512 388 L601 440" stroke="#FFF1D1" stroke-width="17" stroke-linecap="round"/>
+<circle cx="512" cy="388" r="16" fill="url(#gold)" stroke="#FFF4D9" stroke-width="4"/>
+<!-- restrained decorative architectural line -->
+<path d="M235 796 H789" stroke="#DDB66E" stroke-width="10" stroke-linecap="round"/>
+<!-- two slender minarets -->
+<path d="M244 781V575h61v206" fill="url(#ivory)"/>
+<path d="M234 582h82v-19h-82z" fill="url(#gold)"/>
+<path d="M251 563v-35l24-33 23 33v35" fill="url(#ivory)"/>
+<path d="M275 480v-24" stroke="#E1BA76" stroke-width="8" stroke-linecap="round"/>
+<path d="M719 781V575h61v206" fill="url(#ivory)"/>
+<path d="M708 582h83v-19h-83z" fill="url(#gold)"/>
+<path d="M726 563v-35l24-33 23 33v35" fill="url(#ivory)"/>
+<path d="M750 480v-24" stroke="#E1BA76" stroke-width="8" stroke-linecap="round"/>
+<!-- mosque dome, visually anchored -->
+<path d="M336 784V680 C336 576 414 511 512 477 C610 511 688 576 688 680V784Z" fill="url(#ivory)"/>
+<path d="M316 783h392v29H316z" fill="url(#gold)"/>
+<path d="M512 478V449" stroke="#E4BF79" stroke-width="9" stroke-linecap="round"/>
+<path d="M525 427a24 24 0 1 0 14 38a26 26 0 1 1-14-38" fill="#F4D58F"/>
+<path d="M459 784v-95a53 53 0 0 1 106 0v95z" fill="#0A4A44"/>
+<path d="M461 783v-93a51 51 0 0 1 102 0v93" fill="none" stroke="#C89850" stroke-width="8"/>
+<path d="M359 676 Q512 540 665 676" fill="none" stroke="#E0B86E" stroke-width="6" opacity=".75"/>
+<!-- ground -->
+<path d="M226 816h572" stroke="#F5DC9F" stroke-width="12" stroke-linecap="round"/>
+</svg>

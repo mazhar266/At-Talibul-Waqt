@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Themed-icon layer (Android 13+): the launcher tints this single-colour silhouette of the dial,
+  crescent and mosque. Same geometry and mapping as ic_launcher_foreground.xml, with the finer
+  ticks and gradients left out so it reads at small sizes; the doorway is a hole (even-odd fill).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <group
+        android:scaleX="0.666667"
+        android:scaleY="0.666667"
+        android:translateX="170.667"
+        android:translateY="170.667">
+        <path
+            android:pathData="M270,388a242,242 0 1,0 484,0a242,242 0 1,0 -484,0z"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="22" />
+        <path
+            android:pathData="M512,190v23M512,563v23M314,388h23M687,388h23"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="12"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M557,248A99,99 0 1 0 630,390A110,110 0 1 1 557,248Z"
+            android:fillColor="#FFFFFFFF" />
+        <path
+            android:pathData="M512,388L512,280M512,388L601,440"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="20"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M490,388a22,22 0 1,0 44,0a22,22 0 1,0 -44,0z"
+            android:fillColor="#FFFFFFFF" />
+        <path
+            android:pathData="M244,781V575h61v206zM234,582h82v-19h-82zM251,563v-35l24,-33 23,33v35z"
+            android:fillColor="#FFFFFFFF" />
+        <path
+            android:pathData="M719,781V575h61v206zM708,582h83v-19h-83zM726,563v-35l24,-33 23,33v35z"
+            android:fillColor="#FFFFFFFF" />
+        <path
+            android:pathData="M336,784V680C336,576 414,511 512,477C610,511 688,576 688,680V784ZM459,784v-95a53,53 0 0 1 106,0v95z"
+            android:fillColor="#FFFFFFFF"
+            android:fillType="evenOdd" />
+        <path
+            android:pathData="M316,783h392v29H316z"
+            android:fillColor="#FFFFFFFF" />
+        <path
+            android:pathData="M226,816h572"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="14"
+            android:strokeLineCap="round" />
+    </group>
+</vector>
