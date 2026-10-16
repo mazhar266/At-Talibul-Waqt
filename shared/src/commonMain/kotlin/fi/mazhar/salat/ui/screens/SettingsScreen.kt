@@ -1,5 +1,6 @@
 package fi.mazhar.salat.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,10 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -37,7 +41,9 @@ import fi.mazhar.salat.ui.components.BellIcon
 import fi.mazhar.salat.ui.components.Muted
 import fi.mazhar.salat.ui.components.OptionPicker
 import fi.mazhar.salat.ui.components.Pill
+import fi.mazhar.salat.ui.components.PlayIcon
 import fi.mazhar.salat.ui.components.SectionCard
+import fi.mazhar.salat.ui.components.StopIcon
 import fi.mazhar.salat.ui.theme.NoorColors
 
 @Composable
@@ -45,6 +51,7 @@ fun SettingsScreen(viewModel: AppViewModel) {
     val settings by viewModel.settings.collectAsState()
     val location by viewModel.location.collectAsState()
     val notificationStatus by viewModel.notificationStatus.collectAsState()
+    val adhanPlaying by viewModel.adhanPlaying.collectAsState()
     val calc = settings.calculation
     var goalText by remember(settings.dailyGoal) { mutableStateOf(settings.dailyGoal.toString()) }
 
@@ -113,6 +120,30 @@ fun SettingsScreen(viewModel: AppViewModel) {
                     enabled = viewModel.notificationsSupported,
                     colors = SwitchDefaults.colors(checkedTrackColor = NoorColors.Emerald),
                 )
+            }
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Muted(
+                    if (viewModel.adhanTestSupported) "Preview the adhan tone in the app to check it can be heard."
+                    else "No audio output on this device.",
+                    Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(12.dp))
+                val accent = when {
+                    !viewModel.adhanTestSupported -> NoorColors.TextMuted
+                    adhanPlaying -> NoorColors.Amber
+                    else -> NoorColors.Emerald
+                }
+                OutlinedButton(
+                    onClick = viewModel::toggleAdhanTest,
+                    enabled = viewModel.adhanTestSupported,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = accent, disabledContentColor = accent),
+                    border = BorderStroke(1.dp, accent.copy(alpha = 0.6f)),
+                ) {
+                    if (adhanPlaying) StopIcon(accent) else PlayIcon(accent)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (adhanPlaying) "Stop" else "Adhan test", fontWeight = FontWeight.SemiBold)
+                }
             }
             notificationStatus?.let {
                 Spacer(Modifier.height(8.dp))

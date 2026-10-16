@@ -12,11 +12,13 @@ import fi.mazhar.salat.model.GeoLocation
 import fi.mazhar.salat.model.PrayerSlot
 import fi.mazhar.salat.model.RoutineEntry
 import fi.mazhar.salat.model.routineFor
+import fi.mazhar.salat.platform.AudioPlayer
 import fi.mazhar.salat.platform.CompassService
 import fi.mazhar.salat.platform.LocationResult
 import fi.mazhar.salat.platform.LocationService
 import fi.mazhar.salat.platform.NotificationPlanner
 import fi.mazhar.salat.platform.NotificationService
+import fi.mazhar.salat.platform.createAudioPlayer
 import fi.mazhar.salat.platform.createCompassService
 import fi.mazhar.salat.platform.createLocationService
 import fi.mazhar.salat.platform.createNotificationService
@@ -41,6 +43,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import talibulwaqt.shared.generated.resources.Res
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -65,6 +68,7 @@ class AppViewModel(
     private val locationService: LocationService = createLocationService(),
     private val compassService: CompassService = createCompassService(),
     private val notificationService: NotificationService = createNotificationService(),
+    private val audioPlayer: AudioPlayer = createAudioPlayer(),
 ) : ViewModel() {
 
     val settings = repository.settings
@@ -105,9 +109,15 @@ class AppViewModel(
     private val _notificationStatus = MutableStateFlow<String?>(null)
     val notificationStatus: StateFlow<String?> = _notificationStatus
 
+    private val _adhanPlaying = MutableStateFlow(false)
+    /** True while the "Adhan test" clip is sounding. */
+    val adhanPlaying: StateFlow<Boolean> = _adhanPlaying
+    private var adhanClip: ByteArray? = null
+
     val locationSupported: Boolean get() = locationService.isSupported
     val compassSupported: Boolean get() = compassService.isSupported
     val notificationsSupported: Boolean get() = notificationService.isSupported
+    val adhanTestSupported: Boolean get() = audioPlayer.isSupported
 
     /** True headings for the current location; empty where there is no sensor. */
     val headings: Flow<Float> = location.flatMapLatest { compassService.headings(it.latitude, it.longitude) }
@@ -200,6 +210,38 @@ class AppViewModel(
         notificationService.schedule(NotificationPlanner.plan(repository, notificationService.planningHorizonDays))
     }
 
+    // ---- adhan test ------------------------------------------------------------------------
+
+    /** Sounds the bundled adhan tone once, or stops it if it is already playing. */
+    fun toggleAdhanTest() {
+        if (_adhanPlaying.value) {
+            stopAdhanTest()
+            return
+        }
+        if (!audioPlayer.isSupported) return
+        _adhanPlaying.value = true
+        viewModelScope.launch {
+            val clip = try {
+                adhanClip ?: Res.readBytes(ADHAN_CLIP_PATH).also { adhanClip = it }
+            } catch (e: Exception) {
+                _adhanPlaying.value = false
+                return@launch
+            }
+            // Stopped while the clip was still being read.
+            if (!_adhanPlaying.value) return@launch
+            audioPlayer.play(clip) { _adhanPlaying.value = false }
+        }
+    }
+
+    fun stopAdhanTest() {
+        audioPlayer.stop()
+        _adhanPlaying.value = false
+    }
+
+    override fun onCleared() {
+        audioPlayer.release()
+    }
+
     // ---- library & routines ----------------------------------------------------------------
 
     fun addCustomDhikr(
@@ -276,5 +318,10 @@ class AppViewModel(
 
     fun closeSession() {
         _session.value = null
+    }
+
+    companion object {
+        /** Synthesised tone sequence mirroring the web app's adhan sample; see tools/make_adhan_clip.py. */
+        const val ADHAN_CLIP_PATH = "files/adhan_test.wav"
     }
 }

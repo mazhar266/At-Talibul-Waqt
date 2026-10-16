@@ -187,3 +187,21 @@ private fun DrawScope.rays(tint: Color, c: Offset, inner: Float, outer: Float, w
         drawLine(tint, c + dir * inner, c + dir * outer, w, StrokeCap.Round)
     }
 }
+
+@Composable
+fun PlayIcon(tint: Color, modifier: Modifier = Modifier, size: Dp = 14.dp) = Canvas(modifier.size(size)) {
+    val s = this.size.minDimension
+    val triangle = Path().apply {
+        moveTo(s * 0.22f, s * 0.1f)
+        lineTo(s * 0.9f, s * 0.5f)
+        lineTo(s * 0.22f, s * 0.9f)
+        close()
+    }
+    drawPath(triangle, tint)
+}
+
+@Composable
+fun StopIcon(tint: Color, modifier: Modifier = Modifier, size: Dp = 14.dp) = Canvas(modifier.size(size)) {
+    val s = this.size.minDimension
+    drawRoundRect(tint, Offset(s * 0.15f, s * 0.15f), Size(s * 0.7f, s * 0.7f), androidx.compose.ui.geometry.CornerRadius(s * 0.12f))
+}
