@@ -144,7 +144,12 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     }
 }
 
-/** Alarms do not survive reboots or clock/zone changes; rebuild them. */
+/**
+ * Alarms do not survive reboots or clock/zone changes; rebuild them. On Android 12/12L the user can
+ * also withdraw the exact-alarm permission (the system then drops every exact alarm) and later give
+ * it back, which the system announces with [AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED];
+ * re-planning on that broadcast turns the reminders exact again without waiting for the next launch.
+ */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
@@ -152,6 +157,7 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_TIME_CHANGED,
             Intent.ACTION_TIMEZONE_CHANGED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
+            AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED,
             -> AndroidNotificationService.replan(context)
         }
     }
