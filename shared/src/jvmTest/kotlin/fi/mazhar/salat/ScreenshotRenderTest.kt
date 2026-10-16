@@ -23,6 +23,9 @@ class ScreenshotRenderTest {
 
     private val outputDir: File? = System.getenv("TALIBULWAQT_SCREENSHOT_DIR")?.let(::File)
 
+    /** Taller captures show content below the fold of long screens such as Settings. */
+    private val heightPx: Int = System.getenv("TALIBULWAQT_SCREENSHOT_HEIGHT")?.toIntOrNull() ?: 1640
+
     @Test
     fun renderAllTabs() {
         val dir = outputDir ?: return
@@ -43,7 +46,7 @@ class ScreenshotRenderTest {
     }
 
     private fun render(target: File, content: @Composable () -> Unit) {
-        ImageComposeScene(width = 820, height = 1640, density = Density(2f), content = content).use { scene ->
+        ImageComposeScene(width = 820, height = heightPx, density = Density(2f), content = content).use { scene ->
             // A few frames so LaunchedEffects and state flows settle before the capture.
             var time = 0L
             repeat(4) {

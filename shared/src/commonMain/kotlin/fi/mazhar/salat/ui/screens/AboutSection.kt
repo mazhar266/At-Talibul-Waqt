@@ -59,7 +59,8 @@ fun AboutSection(acknowledgements: List<String> = emptyList()) {
                 )
                 Muted("Salat times, Qibla and dhikr companion")
             }
-            Pill("v$version")
+            // "v1.0.0 (1)" on a packaged app; a Gradle run reports "dev build" without the prefix.
+            Pill(if (version.firstOrNull()?.isDigit() == true) "v$version" else version)
         }
 
         Spacer(Modifier.height(12.dp))
