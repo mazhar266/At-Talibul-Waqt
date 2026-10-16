@@ -1,5 +1,6 @@
 package fi.mazhar.salat.platform
 
+import fi.mazhar.salat.model.AdhanSounds
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -40,7 +41,10 @@ class IosNotificationService : NotificationService {
             val content = UNMutableNotificationContent().apply {
                 setTitle(notification.title)
                 setBody(notification.body)
-                setSound(UNNotificationSound.defaultSound)
+                // iOS caps notification sounds at 30 s, so each adhan has an opening clip in the app
+                // bundle (iosApp/iosApp/Sounds); "Beep" keeps the system sound.
+                val clip = AdhanSounds.byId(notification.adhanSoundId).iosNotificationClip
+                setSound(if (clip == null) UNNotificationSound.defaultSound else UNNotificationSound.soundNamed(clip))
             }
             val local = notification.time.toLocalDateTime(timeZone)
             val components = NSDateComponents().apply {
