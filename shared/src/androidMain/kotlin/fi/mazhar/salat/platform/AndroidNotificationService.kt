@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import fi.mazhar.salat.data.AppRepository
 import fi.mazhar.salat.data.createKeyValueStore
+import fi.mazhar.salat.model.AdhanSounds
 
 /**
  * Exact alarms via AlarmManager, one per upcoming prayer, each re-planning the next two days
@@ -60,6 +61,7 @@ class AndroidNotificationService : NotificationService {
 
     companion object {
         const val CHANNEL_ID = "prayer_times"
+        const val ADHAN_CHANNEL_ID = "prayer_times_adhan"
         /** Ids are `dayOffset * 10 + prayer.ordinal`; two days of planning never exceed this. */
         const val MAX_ALARM_ID = 30
         const val PLAN_DAYS = 2
@@ -67,20 +69,31 @@ class AndroidNotificationService : NotificationService {
         fun ensureChannel(context: Context) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            if (manager.getNotificationChannel(CHANNEL_ID) != null) return
-            val channel = NotificationChannel(CHANNEL_ID, "Prayer times", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Adhan reminders at the start of each prayer"
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 300, 200, 300)
+            if (manager.getNotificationChannel(CHANNEL_ID) == null) {
+                val channel = NotificationChannel(CHANNEL_ID, "Prayer times", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Adhan reminders at the start of each prayer"
+                    enableVibration(true)
+                    vibrationPattern = longArrayOf(0, 300, 200, 300)
+                }
+                manager.createNotificationChannel(channel)
             }
-            manager.createNotificationChannel(channel)
+            if (manager.getNotificationChannel(ADHAN_CHANNEL_ID) == null) {
+                // Used while AdhanPlaybackService sounds a recording, so no alert tone overlaps the adhan.
+                val silent = NotificationChannel(ADHAN_CHANNEL_ID, "Prayer times (adhan playing)", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Reminders whose adhan is played by the app; the alert itself stays silent"
+                    setSound(null, null)
+                    enableVibration(true)
+                    vibrationPattern = longArrayOf(0, 300, 200, 300)
+                }
+                manager.createNotificationChannel(silent)
+            }
         }
 
         /** Rebuilds the alarm set from persisted settings; safe to call from any receiver. */
-        fun replan(context: Context) {
+        fun replan(context: Context, repository: AppRepository? = null) {
             AndroidAppContext.ensureInit(context)
-            val repository = AppRepository(createKeyValueStore())
-            val plan = NotificationPlanner.plan(repository, days = PLAN_DAYS)
+            val repo = repository ?: AppRepository(createKeyValueStore())
+            val plan = NotificationPlanner.plan(repo, days = PLAN_DAYS)
             AndroidNotificationService().schedule(plan)
         }
     }
@@ -93,11 +106,20 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         val title = intent.getStringExtra(EXTRA_TITLE)
         val body = intent.getStringExtra(EXTRA_BODY)
         val id = intent.getIntExtra(EXTRA_ID, 0)
-        if (title != null && body != null) show(context, id, title, body)
-        AndroidNotificationService.replan(context)
+        val repository = AppRepository(createKeyValueStore())
+        if (title != null && body != null) {
+            // The sound chosen now, not when the alarm was set, so a later change in Settings still counts.
+            val sound = AdhanSounds.byId(repository.settings.value.adhanSound)
+            // "Beep" keeps the channel's own alert; a recording plays from the foreground service and
+            // the reminder goes out on the silent twin channel so the two do not overlap. Should the
+            // system refuse the background service start, the audible reminder is kept instead.
+            val adhanStarted = !sound.isBeep && AdhanPlaybackService.start(context, sound.id, title)
+            show(context, id, title, body, silent = adhanStarted)
+        }
+        AndroidNotificationService.replan(context, repository)
     }
 
-    private fun show(context: Context, id: Int, title: String, body: String) {
+    private fun show(context: Context, id: Int, title: String, body: String, silent: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !Permissions.isGranted(context, Manifest.permission.POST_NOTIFICATIONS)
         ) return
@@ -105,14 +127,15 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
             PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
-        val notification = NotificationCompat.Builder(context, AndroidNotificationService.CHANNEL_ID)
+        val channelId = if (silent) AndroidNotificationService.ADHAN_CHANNEL_ID else AndroidNotificationService.CHANNEL_ID
+        val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setDefaults(if (silent) NotificationCompat.DEFAULT_VIBRATE or NotificationCompat.DEFAULT_LIGHTS else NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
             .setContentIntent(launch)
             .build()

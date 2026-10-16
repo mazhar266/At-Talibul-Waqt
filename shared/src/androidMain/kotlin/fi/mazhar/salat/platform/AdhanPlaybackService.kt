@@ -26,17 +26,10 @@ import talibulwaqt.shared.generated.resources.Res
  * notification it shows carries a Stop action. Playback uses [AndroidAudioPlayer], so it sounds on
  * the alarm stream like the in-app test.
  *
- * Start it with [start] from `PrayerAlarmReceiver` when the chosen sound is not "Beep". The manifest
- * needs, next to the receivers:
- *
- *     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
- *     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
- *     <service android:name="fi.mazhar.salat.platform.AdhanPlaybackService"
- *              android:exported="false"
- *              android:foregroundServiceType="mediaPlayback" />
- *
- * Starting a foreground service from an exact alarm's receiver is one of the documented
- * exemptions from the background-start restrictions (Android 12+).
+ * `PrayerAlarmReceiver` calls [start] when the chosen sound is not "Beep"; the service is declared in
+ * androidMain/AndroidManifest.xml with the mediaPlayback type. Starting a foreground service from an
+ * exact alarm's receiver is one of the documented exemptions from the background-start restrictions
+ * (Android 12+); if the alarm was inexact the system may refuse, which [start] reports.
  */
 class AdhanPlaybackService : Service() {
 
@@ -116,12 +109,24 @@ class AdhanPlaybackService : Service() {
         private const val EXTRA_SOUND_ID = "soundId"
         private const val EXTRA_TITLE = "title"
 
-        /** Starts playback of [soundId] (an [AdhanSounds] id) with [title] on the service notification. */
-        fun start(context: Context, soundId: String, title: String) {
+        /**
+         * Starts playback of [soundId] (an [AdhanSounds] id) with [title] on the service notification.
+         * Returns false when the system refuses a background start (Android 12+ without an exemption),
+         * so the caller can fall back to an audible notification.
+         */
+        fun start(context: Context, soundId: String, title: String): Boolean {
             val intent = Intent(context, AdhanPlaybackService::class.java)
                 .putExtra(EXTRA_SOUND_ID, soundId)
                 .putExtra(EXTRA_TITLE, title)
-            ContextCompat.startForegroundService(context, intent)
+            return try {
+                ContextCompat.startForegroundService(context, intent)
+                true
+            } catch (e: IllegalStateException) {
+                // ForegroundServiceStartNotAllowedException extends IllegalStateException.
+                false
+            } catch (e: SecurityException) {
+                false
+            }
         }
 
         fun stop(context: Context) {
