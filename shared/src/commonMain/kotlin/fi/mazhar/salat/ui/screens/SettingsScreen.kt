@@ -44,7 +44,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import fi.mazhar.salat.getPlatform
 import fi.mazhar.salat.model.AdhanSound
 import fi.mazhar.salat.model.AdhanSounds
 import fi.mazhar.salat.model.AsrJuristic
@@ -223,16 +222,11 @@ fun SettingsScreen(viewModel: AppViewModel) {
             }
         }
 
-        SectionCard {
-            Text("About", color = NoorColors.TextPrimary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
-            Muted("TalibulWaqt · the mobile companion to NoorSalat (salat.mazhar.fi). Prayer times use the same solar algorithm and Finnish / ECFR high-latitude rules as the web app, so both show identical times.")
-            Spacer(Modifier.height(6.dp))
-            Muted("Arabic text is set in Amiri (SIL Open Font License). Adhan recordings: " +
-                AdhanSounds.recordings.joinToString("; ") { "${it.title} — ${it.credit}, ${it.licence}" } + ".")
-            Spacer(Modifier.height(6.dp))
-            Muted("Running on ${getPlatform().name}")
-        }
+        AboutSection(
+            acknowledgements = listOf("Arabic text is set in Amiri (SIL Open Font License).") +
+                AdhanSounds.recordings.map { "${it.title} — ${it.credit}, ${it.licence}" } +
+                "Desktop MP3 playback uses mp3spi, JLayer and Tritonus (LGPL).",
+        )
     }
 }
 
