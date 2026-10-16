@@ -215,6 +215,10 @@ class AppViewModel(
 
     fun setAdhanSound(id: String) = repository.updateSettings { it.copy(adhanSound = AdhanSounds.byId(id).id) }
 
+    /** Per-prayer reminder modes; the settings flow collector re-plans the alarms afterwards. */
+    fun updateReminders(schedule: fi.mazhar.salat.model.ReminderSchedule) =
+        repository.updateSettings { it.copy(reminders = schedule) }
+
     /** Plays the selected adhan sound once, or stops it if it is already playing. */
     fun toggleAdhanTest() = togglePreview(settings.value.adhanSound)
 

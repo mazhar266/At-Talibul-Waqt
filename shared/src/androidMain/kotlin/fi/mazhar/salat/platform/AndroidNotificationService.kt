@@ -14,6 +14,10 @@ import androidx.core.app.NotificationManagerCompat
 import fi.mazhar.salat.data.AppRepository
 import fi.mazhar.salat.data.createKeyValueStore
 import fi.mazhar.salat.model.AdhanSounds
+import fi.mazhar.salat.model.Prayer
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 /**
  * Exact alarms via AlarmManager, one per upcoming prayer, each re-planning the next two days
@@ -114,13 +118,25 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         val body = intent.getStringExtra(EXTRA_BODY)
         val repository = AppRepository(createKeyValueStore())
         if (title != null && body != null && canNotify(context)) {
-            // The sound chosen now, not when the alarm was set, so a later change in Settings still counts.
-            val sound = AdhanSounds.byId(repository.settings.value.adhanSound)
-            // A recording plays from the foreground service, whose own notification is then the reminder
-            // (silent channel, Stop button). "Beep", or a background start the system refuses, gets the
-            // plain audible reminder instead.
-            val adhanStarted = !sound.isBeep && AdhanPlaybackService.start(context, sound.id, title, body)
-            if (!adhanStarted) showReminder(context, title, body)
+            // Resolve the sound now, not when the alarm was set, so a later change in Settings still
+            // counts: the prayer's reminder mode for today (weekday/weekend) picks adhan, tone, beep or
+            // nothing. Alarms set by an older build carry no prayer and fall back to their sound extra.
+            val settings = repository.settings.value
+            val prayer = intent.getStringExtra(EXTRA_PRAYER)?.let { name -> Prayer.entries.firstOrNull { it.name == name } }
+            val soundId = if (prayer != null) {
+                val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                settings.reminders.modeFor(prayer, today).soundId(settings.adhanSound)
+            } else {
+                intent.getStringExtra(EXTRA_SOUND) ?: settings.adhanSound
+            }
+            if (soundId != null) {
+                val sound = AdhanSounds.byId(soundId)
+                // A recording plays from the foreground service, whose own notification is then the reminder
+                // (silent channel, Stop button). "Beep", or a background start the system refuses, gets the
+                // plain audible reminder instead.
+                val adhanStarted = !sound.isBeep && AdhanPlaybackService.start(context, sound.id, title, body)
+                if (!adhanStarted) showReminder(context, title, body)
+            }
         }
         AndroidNotificationService.replan(context, repository)
     }
@@ -130,6 +146,8 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         private const val EXTRA_ID = "id"
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_BODY = "body"
+        private const val EXTRA_PRAYER = "prayer"
+        private const val EXTRA_SOUND = "sound"
 
         /** Without POST_NOTIFICATIONS (Android 13+) neither a reminder nor an adhan nobody can stop should appear. */
         fun canNotify(context: Context): Boolean =
@@ -163,6 +181,8 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
                 putExtra(EXTRA_ID, notification.id)
                 putExtra(EXTRA_TITLE, notification.title)
                 putExtra(EXTRA_BODY, notification.body)
+                putExtra(EXTRA_PRAYER, notification.prayer.name)
+                putExtra(EXTRA_SOUND, notification.adhanSoundId)
             })
 
         fun intent(context: Context, id: Int): PendingIntent =

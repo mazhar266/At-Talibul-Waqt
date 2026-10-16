@@ -31,6 +31,10 @@ class ScreenshotRenderTest {
         val dir = outputDir ?: return
         dir.mkdirs()
         val viewModel = AppViewModel(AppRepository(InMemoryKeyValueStore()))
+        // The office preset shows both the weekday and weekend reminder tables in the Settings capture.
+        viewModel.updateReminders(fi.mazhar.salat.model.ReminderSchedule.officeWeekdays())
+        // Desktop cannot grant notifications, so flip the flag directly to show the Prayers-tab badges.
+        viewModel.repository.updateSettings { it.copy(notificationsEnabled = true) }
         // Some recorded recitations so the tracker bars have something to show.
         repeat(3) { viewModel.repository.recordTap("post-istighfar", PrayerSlot.DHUHR) }
         repeat(20) { viewModel.repository.recordTap("post-subhanallah", PrayerSlot.DHUHR) }

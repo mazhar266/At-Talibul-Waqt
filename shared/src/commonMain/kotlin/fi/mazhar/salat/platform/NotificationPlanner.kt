@@ -1,6 +1,7 @@
 package fi.mazhar.salat.platform
 
 import fi.mazhar.salat.data.AppRepository
+import fi.mazhar.salat.model.ReminderMode
 import fi.mazhar.salat.prayer.DailySchedule
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -13,6 +14,9 @@ import kotlin.time.Instant
  * Turns the user's location and settings into the concrete adhan notifications for the next
  * [days]. Shared by the app and by the Android alarm receivers, so a device reboot or a fired
  * alarm can rebuild the schedule without the UI.
+ *
+ * Each prayer's [ReminderMode] (per weekday/weekend) decides whether a notification exists at all
+ * and which sound it carries; the platforms only ever look at [PrayerNotification.adhanSoundId].
  */
 object NotificationPlanner {
 
@@ -32,13 +36,19 @@ object NotificationPlanner {
             val times = DailySchedule.forDate(date, location, settings.calculation, timeZone).today
             for ((prayer, time) in times.ordered) {
                 if (!prayer.isObligatory || time <= now) continue
+                val mode = settings.reminders.modeFor(prayer, date)
+                val soundId = mode.soundId(settings.adhanSound) ?: continue
                 result += PrayerNotification(
                     id = offset * 10 + prayer.ordinal,
                     prayer = prayer,
                     time = time,
                     title = "Time for ${prayer.displayName} Prayer",
-                    body = "Adhan has arrived for ${prayer.displayName} in ${location.name}. Hayya 'alas-Salah!",
-                    adhanSoundId = settings.adhanSound,
+                    body = if (mode == ReminderMode.ADHAN) {
+                        "Adhan has arrived for ${prayer.displayName} in ${location.name}. Hayya 'alas-Salah!"
+                    } else {
+                        "${prayer.displayName} prayer time in ${location.name}. Hayya 'alas-Salah!"
+                    },
+                    adhanSoundId = soundId,
                 )
             }
         }

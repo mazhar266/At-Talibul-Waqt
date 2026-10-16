@@ -115,6 +115,8 @@ data class UserSettings(
     val notificationsEnabled: Boolean = false,
     /** [AdhanSounds] id played when a prayer comes in; persisted settings rely on these ids staying stable. */
     val adhanSound: String = AdhanSounds.DEFAULT_ID,
+    /** Which prayers get the adhan, a tone, a beep or nothing — optionally different on weekends. */
+    val reminders: ReminderSchedule = ReminderSchedule(),
     /** Recitations per day the tracker's headline bar is measured against. */
     val dailyGoal: Int = 300,
     val hapticsEnabled: Boolean = true,

@@ -160,6 +160,13 @@ fun SettingsScreen(viewModel: AppViewModel) {
                     "Recordings come from Wikimedia Commons and the Internet Archive under the licences shown; the full credits ship with the app as adhan/CREDITS.md.",
                     Modifier.padding(top = 6.dp),
                 )
+
+                Spacer(Modifier.height(18.dp))
+                ReminderScheduleSection(
+                    schedule = settings.reminders,
+                    defaultAdhanTitle = selectedSound.title,
+                    onChange = viewModel::updateReminders,
+                )
             }
 
             Spacer(Modifier.height(12.dp))

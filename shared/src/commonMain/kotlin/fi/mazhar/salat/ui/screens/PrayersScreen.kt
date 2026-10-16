@@ -44,6 +44,7 @@ import fi.mazhar.salat.model.GeoLocation
 import fi.mazhar.salat.model.Prayer
 import fi.mazhar.salat.model.PrayerSlot
 import fi.mazhar.salat.model.PresetLocations
+import fi.mazhar.salat.model.ReminderMode
 import fi.mazhar.salat.ui.AppViewModel
 import fi.mazhar.salat.ui.components.Muted
 import fi.mazhar.salat.ui.components.Pill
@@ -64,6 +65,7 @@ fun PrayersScreen(viewModel: AppViewModel, onOpenSettings: () -> Unit) {
     val location by viewModel.location.collectAsState()
     val schedule by viewModel.schedule.collectAsState()
     val period by viewModel.period.collectAsState()
+    val settings by viewModel.settings.collectAsState()
     val locating by viewModel.locating.collectAsState()
     val locationStatus by viewModel.locationStatus.collectAsState()
     val today = schedule.today
@@ -201,11 +203,18 @@ fun PrayersScreen(viewModel: AppViewModel, onOpenSettings: () -> Unit) {
         items(today.ordered, key = { it.first.name }) { (prayer, time) ->
             val isNext = prayer == period.next && period.nextTime == time
             val isCurrent = prayer == period.current && period.currentStart == time
+            // Today's reminder mode, shown only when it differs from the full adhan.
+            val reminder = if (settings.notificationsEnabled && prayer.isObligatory) {
+                settings.reminders.modeFor(prayer, today.date).takeIf { it != ReminderMode.ADHAN }
+            } else {
+                null
+            }
             PrayerRow(
                 prayer = prayer,
                 time = time.formatTime(zone),
                 isNext = isNext,
                 isCurrent = isCurrent,
+                reminder = reminder,
                 onStartDhikr = PrayerSlot.of(prayer)?.let { slot -> { viewModel.startRoutine(slot) } },
             )
         }
@@ -254,7 +263,14 @@ private fun HighLatitudeBanner(condition: ExtremeCondition, location: GeoLocatio
 }
 
 @Composable
-private fun PrayerRow(prayer: Prayer, time: String, isNext: Boolean, isCurrent: Boolean, onStartDhikr: (() -> Unit)?) {
+private fun PrayerRow(
+    prayer: Prayer,
+    time: String,
+    isNext: Boolean,
+    isCurrent: Boolean,
+    reminder: ReminderMode?,
+    onStartDhikr: (() -> Unit)?,
+) {
     val border = when {
         isNext -> NoorColors.Emerald
         isCurrent -> NoorColors.Amber.copy(alpha = 0.5f)
@@ -281,6 +297,17 @@ private fun PrayerRow(prayer: Prayer, time: String, isNext: Boolean, isCurrent: 
                 } else if (isCurrent) {
                     Spacer(Modifier.width(8.dp))
                     Pill("NOW", color = NoorColors.Amber)
+                }
+                if (reminder != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Pill(
+                        reminder.label,
+                        color = when (reminder) {
+                            ReminderMode.BEEP -> NoorColors.Sky
+                            ReminderMode.TONE -> NoorColors.Amber
+                            else -> NoorColors.TextMuted
+                        },
+                    )
                 }
             }
             if (onStartDhikr != null) {

@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.time.Instant
 
+@Serializable
 enum class Prayer(val displayName: String, val arabicName: String) {
     FAJR("Fajr", "الفجر"),
     SUNRISE("Sunrise", "الشروق"),
