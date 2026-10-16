@@ -113,6 +113,8 @@ fun DailyRecord.progressFor(slot: PrayerSlot, routine: List<RoutineEntry>, libra
 data class UserSettings(
     val calculation: CalculationSettings = CalculationSettings(),
     val notificationsEnabled: Boolean = false,
+    /** [AdhanSounds] id played when a prayer comes in; persisted settings rely on these ids staying stable. */
+    val adhanSound: String = AdhanSounds.DEFAULT_ID,
     /** Recitations per day the tracker's headline bar is measured against. */
     val dailyGoal: Int = 300,
     val hapticsEnabled: Boolean = true,

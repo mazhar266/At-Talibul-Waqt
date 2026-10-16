@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fi.mazhar.salat.data.AppRepository
 import fi.mazhar.salat.data.createKeyValueStore
+import fi.mazhar.salat.model.AdhanSounds
 import fi.mazhar.salat.model.CalculationSettings
 import fi.mazhar.salat.model.DailyRecord
 import fi.mazhar.salat.model.Dhikr
@@ -109,10 +110,10 @@ class AppViewModel(
     private val _notificationStatus = MutableStateFlow<String?>(null)
     val notificationStatus: StateFlow<String?> = _notificationStatus
 
-    private val _adhanPlaying = MutableStateFlow(false)
-    /** True while the "Adhan test" clip is sounding. */
-    val adhanPlaying: StateFlow<Boolean> = _adhanPlaying
-    private var adhanClip: ByteArray? = null
+    private val _previewingSound = MutableStateFlow<String?>(null)
+    /** Id of the adhan sound currently playing from the picker or the test button, or null. */
+    val previewingSound: StateFlow<String?> = _previewingSound
+    private var cachedClip: Pair<String, ByteArray>? = null
 
     val locationSupported: Boolean get() = locationService.isSupported
     val compassSupported: Boolean get() = compassService.isSupported
@@ -210,32 +211,43 @@ class AppViewModel(
         notificationService.schedule(NotificationPlanner.plan(repository, notificationService.planningHorizonDays))
     }
 
-    // ---- adhan test ------------------------------------------------------------------------
+    // ---- adhan sound -----------------------------------------------------------------------
 
-    /** Sounds the bundled adhan tone once, or stops it if it is already playing. */
-    fun toggleAdhanTest() {
-        if (_adhanPlaying.value) {
-            stopAdhanTest()
+    fun setAdhanSound(id: String) = repository.updateSettings { it.copy(adhanSound = AdhanSounds.byId(id).id) }
+
+    /** Plays the selected adhan sound once, or stops it if it is already playing. */
+    fun toggleAdhanTest() = togglePreview(settings.value.adhanSound)
+
+    /** Plays [soundId] from the start, or stops it if it is the one playing. "Beep" has nothing to play. */
+    fun togglePreview(soundId: String) {
+        if (_previewingSound.value == soundId) {
+            stopPreview()
             return
         }
+        val sound = AdhanSounds.byId(soundId)
+        val path = sound.resourcePath ?: return
         if (!audioPlayer.isSupported) return
-        _adhanPlaying.value = true
+        audioPlayer.stop()
+        _previewingSound.value = sound.id
         viewModelScope.launch {
-            val clip = try {
-                adhanClip ?: Res.readBytes(ADHAN_CLIP_PATH).also { adhanClip = it }
+            val bytes = try {
+                cachedClip?.takeIf { it.first == sound.id }?.second
+                    ?: Res.readBytes(path).also { cachedClip = sound.id to it }
             } catch (e: Exception) {
-                _adhanPlaying.value = false
+                if (_previewingSound.value == sound.id) _previewingSound.value = null
                 return@launch
             }
-            // Stopped while the clip was still being read.
-            if (!_adhanPlaying.value) return@launch
-            audioPlayer.play(clip) { _adhanPlaying.value = false }
+            // Stopped, or switched to another sound, while the clip was being read.
+            if (_previewingSound.value != sound.id) return@launch
+            audioPlayer.play(bytes) {
+                if (_previewingSound.value == sound.id) _previewingSound.value = null
+            }
         }
     }
 
-    fun stopAdhanTest() {
+    fun stopPreview() {
         audioPlayer.stop()
-        _adhanPlaying.value = false
+        _previewingSound.value = null
     }
 
     override fun onCleared() {
@@ -318,10 +330,5 @@ class AppViewModel(
 
     fun closeSession() {
         _session.value = null
-    }
-
-    companion object {
-        /** Synthesised tone sequence mirroring the web app's adhan sample; see tools/make_adhan_clip.py. */
-        const val ADHAN_CLIP_PATH = "files/adhan_test.wav"
     }
 }

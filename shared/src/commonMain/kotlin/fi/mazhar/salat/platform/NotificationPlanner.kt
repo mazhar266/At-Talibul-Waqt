@@ -38,6 +38,7 @@ object NotificationPlanner {
                     time = time,
                     title = "Time for ${prayer.displayName} Prayer",
                     body = "Adhan has arrived for ${prayer.displayName} in ${location.name}. Hayya 'alas-Salah!",
+                    adhanSoundId = settings.adhanSound,
                 )
             }
         }

@@ -57,6 +57,10 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
         }
+        jvmMain.dependencies {
+            // Lets the desktop AudioPlayer decode the bundled MP3 adhan recordings.
+            implementation(libs.mp3spi)
+        }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)

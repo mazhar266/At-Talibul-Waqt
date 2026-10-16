@@ -1,5 +1,6 @@
 package fi.mazhar.salat.platform
 
+import fi.mazhar.salat.model.AdhanSounds
 import fi.mazhar.salat.model.Prayer
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant
@@ -33,6 +34,8 @@ data class PrayerNotification(
     val time: Instant,
     val title: String,
     val body: String,
+    /** [AdhanSounds] id to sound with it; "beep" means the platform's default notification sound. */
+    val adhanSoundId: String = AdhanSounds.DEFAULT_ID,
 )
 
 interface NotificationService {
