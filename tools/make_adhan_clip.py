@@ -1,4 +1,4 @@
-"""Generates shared/src/commonMain/composeResources/files/adhan_test.wav.
+"""Generates shared/src/commonMain/composeResources/files/adhan/tone.wav.
 
 The clip is a synthesised tone sequence, not a recording. It reproduces the Web Audio graph in
 NoorSalat's ``playAdhanSample()`` (salat.mazhar.fi) as closely as a fixed PCM file can: the same
@@ -18,7 +18,7 @@ import struct
 import sys
 
 SAMPLE_RATE = 22_050
-OUTPUT = pathlib.Path(__file__).resolve().parents[1] / "shared/src/commonMain/composeResources/files/adhan_test.wav"
+OUTPUT = pathlib.Path(__file__).resolve().parents[1] / "shared/src/commonMain/composeResources/files/adhan/tone.wav"
 
 # (frequency in Hz, sounding duration in s, silence after it in s): copied verbatim from the web app.
 NOTES = [
