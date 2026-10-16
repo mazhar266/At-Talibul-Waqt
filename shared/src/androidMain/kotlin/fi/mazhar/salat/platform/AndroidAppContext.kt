@@ -27,7 +27,11 @@ object AndroidAppContext {
         if (isInitialized) return
         application = app
         app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
-            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = track(activity)
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                track(activity)
+                // Lets a permission prompt that outlived its activity (rotation) deliver its result.
+                if (activity is ComponentActivity) Permissions.onActivityCreated(activity)
+            }
             override fun onActivityStarted(activity: Activity) = track(activity)
             override fun onActivityResumed(activity: Activity) = track(activity)
             override fun onActivityPaused(activity: Activity) = Unit
