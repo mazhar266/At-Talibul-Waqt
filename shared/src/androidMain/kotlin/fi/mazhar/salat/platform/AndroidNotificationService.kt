@@ -62,6 +62,12 @@ class AndroidNotificationService : NotificationService {
     companion object {
         const val CHANNEL_ID = "prayer_times"
         const val ADHAN_CHANNEL_ID = "prayer_times_adhan"
+        /**
+         * One reminder at a time: each prayer's replaces the previous one, so the shade never
+         * auto-groups them and hides the Stop button. AdhanPlaybackService fronts its notification
+         * under the same id (startForeground rejects 0, the id of today's Fajr alarm).
+         */
+        const val REMINDER_NOTIFICATION_ID = 7001
         /** Ids are `dayOffset * 10 + prayer.ordinal`; two days of planning never exceed this. */
         const val MAX_ALARM_ID = 30
         const val PLAN_DAYS = 2
@@ -78,7 +84,8 @@ class AndroidNotificationService : NotificationService {
                 manager.createNotificationChannel(channel)
             }
             if (manager.getNotificationChannel(ADHAN_CHANNEL_ID) == null) {
-                // Used while AdhanPlaybackService sounds a recording, so no alert tone overlaps the adhan.
+                // AdhanPlaybackService posts the reminder here while it sounds a recording: high importance
+                // so it pops up with its Stop button, but silent so no alert tone overlaps the adhan.
                 val silent = NotificationChannel(ADHAN_CHANNEL_ID, "Prayer times (adhan playing)", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "Reminders whose adhan is played by the app; the alert itself stays silent"
                     setSound(null, null)
@@ -105,41 +112,17 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         AndroidAppContext.ensureInit(context)
         val title = intent.getStringExtra(EXTRA_TITLE)
         val body = intent.getStringExtra(EXTRA_BODY)
-        val id = intent.getIntExtra(EXTRA_ID, 0)
         val repository = AppRepository(createKeyValueStore())
-        if (title != null && body != null) {
+        if (title != null && body != null && canNotify(context)) {
             // The sound chosen now, not when the alarm was set, so a later change in Settings still counts.
             val sound = AdhanSounds.byId(repository.settings.value.adhanSound)
-            // "Beep" keeps the channel's own alert; a recording plays from the foreground service and
-            // the reminder goes out on the silent twin channel so the two do not overlap. Should the
-            // system refuse the background service start, the audible reminder is kept instead.
-            val adhanStarted = !sound.isBeep && AdhanPlaybackService.start(context, sound.id, title)
-            show(context, id, title, body, silent = adhanStarted)
+            // A recording plays from the foreground service, whose own notification is then the reminder
+            // (silent channel, Stop button). "Beep", or a background start the system refuses, gets the
+            // plain audible reminder instead.
+            val adhanStarted = !sound.isBeep && AdhanPlaybackService.start(context, sound.id, title, body)
+            if (!adhanStarted) showReminder(context, title, body)
         }
         AndroidNotificationService.replan(context, repository)
-    }
-
-    private fun show(context: Context, id: Int, title: String, body: String, silent: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !Permissions.isGranted(context, Manifest.permission.POST_NOTIFICATIONS)
-        ) return
-        AndroidNotificationService.ensureChannel(context)
-        val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
-            PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        }
-        val channelId = if (silent) AndroidNotificationService.ADHAN_CHANNEL_ID else AndroidNotificationService.CHANNEL_ID
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setDefaults(if (silent) NotificationCompat.DEFAULT_VIBRATE or NotificationCompat.DEFAULT_LIGHTS else NotificationCompat.DEFAULT_ALL)
-            .setAutoCancel(true)
-            .setContentIntent(launch)
-            .build()
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_TAG, id, notification)
     }
 
     companion object {
@@ -147,7 +130,32 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         private const val EXTRA_ID = "id"
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_BODY = "body"
-        private const val NOTIFICATION_TAG = "prayer"
+
+        /** Without POST_NOTIFICATIONS (Android 13+) neither a reminder nor an adhan nobody can stop should appear. */
+        fun canNotify(context: Context): Boolean =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                Permissions.isGranted(context, Manifest.permission.POST_NOTIFICATIONS)
+
+        /** The audible reminder on the regular channel: the device's alert sound plus vibration. */
+        fun showReminder(context: Context, title: String, body: String) {
+            if (!canNotify(context)) return
+            AndroidNotificationService.ensureChannel(context)
+            val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
+                PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            }
+            val notification = NotificationCompat.Builder(context, AndroidNotificationService.CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setAutoCancel(true)
+                .setContentIntent(launch)
+                .build()
+            NotificationManagerCompat.from(context).notify(AndroidNotificationService.REMINDER_NOTIFICATION_ID, notification)
+        }
 
         fun intent(context: Context, notification: PrayerNotification): PendingIntent =
             pending(context, notification.id, Intent(context, PrayerAlarmReceiver::class.java).apply {
