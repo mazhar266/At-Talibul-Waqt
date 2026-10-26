@@ -20,6 +20,8 @@ data class AdhanSound(
     val resourcePath: String?,
     /** File in the iOS app bundle (≤ 30 s) used as the notification sound; null means the default sound. */
     val iosNotificationClip: String?,
+    /** A Fajr adhan: it adds "as-salatu khayrun min an-nawm", so it is the right choice for Fajr only. */
+    val fajr: Boolean = false,
 ) {
     val isBeep: Boolean get() = resourcePath == null
 
@@ -36,6 +38,8 @@ object AdhanSounds {
     const val BEEP_ID = "beep"
     const val TONE_ID = "tone"
     const val DEFAULT_ID = "makkah_haram"
+    /** Pre-selected when the user turns on a separate Fajr adhan. */
+    const val DEFAULT_FAJR_ID = "malmo_besim_azemi"
 
     val recordings: List<AdhanSound> = listOf(
         AdhanSound(
@@ -70,6 +74,7 @@ object AdhanSounds {
             durationSeconds = 245,
             resourcePath = "files/adhan/malmo_besim_azemi.mp3",
             iosNotificationClip = "adhan_malmo_besim_azemi.caf",
+            fajr = true,
         ),
         AdhanSound(
             id = "doha_qatar",
@@ -133,6 +138,9 @@ object AdhanSounds {
     )
 
     val all: List<AdhanSound> = recordings + tone + beep
+
+    /** Recordings that carry the Fajr wording; the rest are ordinary adhans. */
+    val fajrRecordings: List<AdhanSound> get() = recordings.filter { it.fajr }
 
     /** Resolves a stored id, falling back to the default for ids from a build that no longer has them. */
     fun byId(id: String?): AdhanSound = all.firstOrNull { it.id == id } ?: all.first { it.id == DEFAULT_ID }

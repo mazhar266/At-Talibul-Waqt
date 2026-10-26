@@ -215,6 +215,10 @@ class AppViewModel(
 
     fun setAdhanSound(id: String) = repository.updateSettings { it.copy(adhanSound = AdhanSounds.byId(id).id) }
 
+    /** A separate recording for Fajr; null goes back to using the same adhan as the other prayers. */
+    fun setFajrAdhanSound(id: String?) =
+        repository.updateSettings { it.copy(fajrAdhanSound = id?.let { chosen -> AdhanSounds.byId(chosen).id }) }
+
     /** Per-prayer reminder modes; the settings flow collector re-plans the alarms afterwards. */
     fun updateReminders(schedule: fi.mazhar.prayer.adhan.model.ReminderSchedule) =
         repository.updateSettings { it.copy(reminders = schedule) }

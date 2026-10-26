@@ -125,7 +125,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             val prayer = intent.getStringExtra(EXTRA_PRAYER)?.let { name -> Prayer.entries.firstOrNull { it.name == name } }
             val soundId = if (prayer != null) {
                 val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                settings.reminders.modeFor(prayer, today).soundId(settings.adhanSound)
+                settings.reminders.modeFor(prayer, today).soundId(settings.adhanSoundFor(prayer))
             } else {
                 intent.getStringExtra(EXTRA_SOUND) ?: settings.adhanSound
             }

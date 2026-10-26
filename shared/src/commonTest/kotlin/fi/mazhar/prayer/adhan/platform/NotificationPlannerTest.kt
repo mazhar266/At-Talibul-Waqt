@@ -48,6 +48,16 @@ class NotificationPlannerTest {
     }
 
     @Test
+    fun fajrCanUseItsOwnRecording() {
+        val repo = repository { it.copy(adhanSound = "istanbul", fajrAdhanSound = AdhanSounds.DEFAULT_FAJR_ID) }
+        val plan = NotificationPlanner.plan(repo, days = 2, now = fridayMorning, timeZone = zone)
+        assertEquals(AdhanSounds.DEFAULT_FAJR_ID, plan.on(saturday, Prayer.FAJR)?.adhanSoundId)
+        assertEquals("istanbul", plan.on(saturday, Prayer.DHUHR)?.adhanSoundId)
+        assertEquals("istanbul", plan.on(friday, Prayer.ISHA)?.adhanSoundId)
+        assertEquals(AdhanSounds.DEFAULT_ID, UserSettings().adhanSoundFor(Prayer.FAJR), "no override = the shared adhan")
+    }
+
+    @Test
     fun officePresetBeepsForDhuhrAndAsrOnWeekdaysOnly() {
         val repo = repository { it.copy(reminders = ReminderSchedule.officeWeekdays()) }
         val plan = NotificationPlanner.plan(repo, days = 2, now = fridayMorning, timeZone = zone)

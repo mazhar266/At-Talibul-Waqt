@@ -37,7 +37,7 @@ object NotificationPlanner {
             for ((prayer, time) in times.ordered) {
                 if (!prayer.isObligatory || time <= now) continue
                 val mode = settings.reminders.modeFor(prayer, date)
-                val soundId = mode.soundId(settings.adhanSound) ?: continue
+                val soundId = mode.soundId(settings.adhanSoundFor(prayer)) ?: continue
                 result += PrayerNotification(
                     id = offset * 10 + prayer.ordinal,
                     prayer = prayer,

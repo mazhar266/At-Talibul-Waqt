@@ -35,6 +35,8 @@ class ScreenshotRenderTest {
         viewModel.updateReminders(fi.mazhar.prayer.adhan.model.ReminderSchedule.officeWeekdays())
         // Desktop cannot grant notifications, so flip the flag directly to show the Prayers-tab badges.
         viewModel.repository.updateSettings { it.copy(notificationsEnabled = true) }
+        // A separate Fajr recording expands the Fajr picker in the Settings capture.
+        viewModel.setFajrAdhanSound(fi.mazhar.prayer.adhan.model.AdhanSounds.DEFAULT_FAJR_ID)
         // Some recorded recitations so the tracker bars have something to show.
         repeat(3) { viewModel.repository.recordTap("post-istighfar", PrayerSlot.DHUHR) }
         repeat(20) { viewModel.repository.recordTap("post-subhanallah", PrayerSlot.DHUHR) }

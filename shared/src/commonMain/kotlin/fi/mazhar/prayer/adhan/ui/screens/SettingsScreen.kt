@@ -162,9 +162,13 @@ fun SettingsScreen(viewModel: AppViewModel) {
                 )
 
                 Spacer(Modifier.height(18.dp))
+                FajrAdhanSection(selectedId = settings.fajrAdhanSound, previewing = previewing, viewModel = viewModel)
+
+                Spacer(Modifier.height(18.dp))
+                val fajrSuffix = settings.fajrAdhanSound?.let { " (Fajr: ${AdhanSounds.byId(it).title})" } ?: ""
                 ReminderScheduleSection(
                     schedule = settings.reminders,
-                    defaultAdhanTitle = selectedSound.title,
+                    defaultAdhanTitle = selectedSound.title + fajrSuffix,
                     onChange = viewModel::updateReminders,
                 )
             }
@@ -237,6 +241,53 @@ fun SettingsScreen(viewModel: AppViewModel) {
     }
 }
 
+/**
+ * The Fajr adhan has its own wording, so Fajr can use a different recording from the other four
+ * prayers. Off = the same adhan everywhere; on = pick from the recordings, Fajr ones listed first.
+ */
+@Composable
+private fun FajrAdhanSection(selectedId: String?, previewing: String?, viewModel: AppViewModel) {
+    val enabled = selectedId != null
+    Eyebrow("Fajr adhan")
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Different adhan for Fajr", color = NoorColors.TextPrimary, style = MaterialTheme.typography.bodyMedium)
+            Muted(
+                "The Fajr adhan adds \"as-salatu khayrun min an-nawm\" — prayer is better than sleep — " +
+                    "so it is a different recording from the daytime adhan.",
+            )
+        }
+        Switch(
+            checked = enabled,
+            onCheckedChange = { viewModel.setFajrAdhanSound(if (it) AdhanSounds.DEFAULT_FAJR_ID else null) },
+            colors = SwitchDefaults.colors(checkedTrackColor = NoorColors.Emerald),
+        )
+    }
+    if (enabled) {
+        val selected = AdhanSounds.byId(selectedId)
+        Spacer(Modifier.height(6.dp))
+        AdhanSounds.recordings.sortedByDescending { it.fajr }.forEach { sound ->
+            AdhanSoundRow(
+                sound = sound,
+                selected = sound.id == selected.id,
+                playing = previewing == sound.id,
+                previewEnabled = viewModel.adhanTestSupported,
+                onSelect = { viewModel.setFajrAdhanSound(sound.id) },
+                onPreview = { viewModel.togglePreview(sound.id) },
+            )
+        }
+        val fajrCount = AdhanSounds.fajrRecordings.size
+        Muted(
+            if (fajrCount == 1) {
+                "Only ${AdhanSounds.fajrRecordings.single().title} is a true Fajr adhan among the bundled recordings; the others play as a normal adhan."
+            } else {
+                "Recordings marked Fajr carry the Fajr wording; the others play as a normal adhan."
+            },
+            Modifier.padding(top = 6.dp),
+        )
+    }
+}
+
 /** One selectable adhan sound: radio, name with duration, origin and credit, and a preview control. */
 @Composable
 private fun AdhanSoundRow(
@@ -270,6 +321,10 @@ private fun AdhanSoundRow(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
+                if (sound.fajr) {
+                    Pill("Fajr", color = NoorColors.Sky)
+                    Spacer(Modifier.width(8.dp))
+                }
                 if (!sound.isBeep) {
                     Text(sound.durationLabel, color = NoorColors.TextMuted, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
                 }
