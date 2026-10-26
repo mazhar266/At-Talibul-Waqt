@@ -17,11 +17,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "fi.mazhar.salat.MainKt"
+        mainClass = "fi.mazhar.prayer.adhan.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "fi.mazhar.salat"
+            packageName = "fi.mazhar.prayer.adhan"
             packageVersion = "1.0.0"
             // Generated from icons/ by tools/make_app_icons.py.
             val iconDir = project.file("icons")

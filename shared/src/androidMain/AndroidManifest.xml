@@ -14,11 +14,11 @@
 
     <application>
         <receiver
-            android:name="fi.mazhar.salat.platform.PrayerAlarmReceiver"
+            android:name="fi.mazhar.prayer.adhan.platform.PrayerAlarmReceiver"
             android:exported="false" />
 
         <receiver
-            android:name="fi.mazhar.salat.platform.BootReceiver"
+            android:name="fi.mazhar.prayer.adhan.platform.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -30,7 +30,7 @@
         </receiver>
 
         <service
-            android:name="fi.mazhar.salat.platform.AdhanPlaybackService"
+            android:name="fi.mazhar.prayer.adhan.platform.AdhanPlaybackService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
     </application>

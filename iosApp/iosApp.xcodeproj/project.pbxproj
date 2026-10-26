@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		89CA45DAB0ECA7098E6E3C02 /* TalibulWaqt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TalibulWaqt.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		89CA45DAB0ECA7098E6E3C02 /* Adhan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Adhan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,7 +59,7 @@
 		42DE3D483D87DA1565E297AA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				89CA45DAB0ECA7098E6E3C02 /* TalibulWaqt.app */,
+				89CA45DAB0ECA7098E6E3C02 /* Adhan.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -87,7 +87,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = 89CA45DAB0ECA7098E6E3C02 /* TalibulWaqt.app */;
+			productReference = 89CA45DAB0ECA7098E6E3C02 /* Adhan.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

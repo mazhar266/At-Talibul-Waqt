@@ -22,7 +22,7 @@ kotlin {
     jvm()
 
     android {
-       namespace = "fi.mazhar.salat.shared"
+       namespace = "fi.mazhar.prayer.adhan.shared"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()
 

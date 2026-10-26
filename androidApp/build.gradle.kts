@@ -20,11 +20,11 @@ dependencies {
 }
 
 android {
-    namespace = "fi.mazhar.salat"
+    namespace = "fi.mazhar.prayer.adhan"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "fi.mazhar.salat"
+        applicationId = "fi.mazhar.prayer.adhan"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

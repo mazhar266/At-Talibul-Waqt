@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-TalibulWaqt is a Kotlin Multiplatform + Compose Multiplatform salat (prayer) app for Android, iOS and Desktop (JVM). It is the mobile companion to the owner's NoorSalat web app (https://salat.mazhar.fi) and deliberately mirrors it: same prayer-time algorithm and Finnish/ECFR high-latitude rules, same dhikr library ids, same per-prayer adhkar routines and daily recitation tracking. Package/namespace is `fi.mazhar.salat`.
+Adhan (repository folder `TalibulWaqt`) is a Kotlin Multiplatform + Compose Multiplatform salat (prayer) app for Android, iOS and Desktop (JVM). It is the mobile companion to the owner's NoorSalat web app (https://salat.mazhar.fi) and deliberately mirrors it: same prayer-time algorithm and Finnish/ECFR high-latitude rules, same dhikr library ids, same per-prayer adhkar routines and daily recitation tracking. Package/namespace is `fi.mazhar.prayer.adhan`.
 
 ## Commands
 
@@ -20,8 +20,8 @@ Tests live in `shared` only (`commonTest` runs under each platform's task):
 - Desktop/JVM: `./gradlew :shared:jvmTest`
 - Android host (local JVM): `./gradlew :shared:testAndroidHostTest`
 - iOS simulator: `./gradlew :shared:iosSimulatorArm64Test` (macOS only)
-- Single class/method: `./gradlew :shared:jvmTest --tests "fi.mazhar.salat.prayer.PrayerTimeCalculatorTest"` (append `.methodName`; same flag works for `testAndroidHostTest`)
-- UI screenshots without an emulator: `TALIBULWAQT_SCREENSHOT_DIR=/some/dir ./gradlew :shared:jvmTest --tests "fi.mazhar.salat.ScreenshotRenderTest"` renders every tab plus the tasbeeh session to PNG via `ImageComposeScene` (`shared/src/jvmTest/.../ScreenshotRenderTest.kt`). It is a no-op when the env var is unset.
+- Single class/method: `./gradlew :shared:jvmTest --tests "fi.mazhar.prayer.adhan.prayer.PrayerTimeCalculatorTest"` (append `.methodName`; same flag works for `testAndroidHostTest`)
+- UI screenshots without an emulator: `ADHAN_SCREENSHOT_DIR=/some/dir ./gradlew :shared:jvmTest --tests "fi.mazhar.prayer.adhan.ScreenshotRenderTest"` renders every tab plus the tasbeeh session to PNG via `ImageComposeScene` (`shared/src/jvmTest/.../ScreenshotRenderTest.kt`). It is a no-op when the env var is unset.
 
 No ktlint/detekt is configured; Android lint is `./gradlew :androidApp:lint`.
 
@@ -36,16 +36,16 @@ No ktlint/detekt is configured; Android lint is `./gradlew :androidApp:lint`.
 
 Three thin hosts around one shared module. `App()` in `shared/src/commonMain/.../App.kt` is the single UI entry point; `AppContent(viewModel, tab)` is the injectable variant used by screenshots/previews.
 
-- `androidApp/` → `TalibulWaqtApplication` calls `initTalibulWaqt(app)` (gives shared code the Application context and tracks the foreground Activity), `MainActivity` does `setContent { App() }`.
+- `androidApp/` → `AdhanApplication` calls `initAdhanApp(app)` (gives shared code the Application context and tracks the foreground Activity), `MainActivity` does `setContent { App() }`.
 - `desktopApp/` → `main.kt` opens a Compose `Window { App() }`.
 - iOS → `iosMain/MainViewController.kt` wraps `App()`; `iosApp/.../ContentView.swift` embeds it. An Xcode build phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode` (static framework `Shared`). `Info.plist` carries `NSLocationWhenInUseUsageDescription`.
 
-Inside `shared/src/commonMain/kotlin/fi/mazhar/salat/`:
+Inside `shared/src/commonMain/kotlin/fi/mazhar/prayer/adhan/`:
 
 - `model/` — pure data: `Prayer`, `CalculationMethod` (angles per convention), `HighLatitudeRule`, `GeoLocation` + `PresetLocations`, `PrayerTimes`; `Dhikr`/`DhikrCategory`, `PrayerSlot` (ALL + the five prayers), `RoutineEntry`/`Playlist`, `DailyRecord` with `progressFor()`; `UserSettings`; `AdhanSounds` (bundled recordings + Tone + Beep, credits in `composeResources/files/adhan/CREDITS.md`); `ReminderSchedule` (per-prayer `ReminderMode` ADHAN/TONE/BEEP/OFF with an optional weekend set — resolved per date by `NotificationPlanner` and again by `PrayerAlarmReceiver` when the alarm fires). `DefaultDhikrLibrary` holds the built-in adhkar (same ids as the web app) and the default per-prayer playlist.
 - `prayer/` — `SolarMath` (praytimes-style declination/EoT/hour angle), `PrayerTimeCalculator` (see "Prayer-time rules" below), `DailySchedule` (yesterday/today/tomorrow timeline → current period, countdown, upcoming prayers).
 - `qibla/Qibla.kt` — great-circle bearing/distance to the Kaaba with pole special-cases, 16-point compass labels, relative turn.
-- `data/` — `KeyValueStore` (expect; SharedPreferences / NSUserDefaults / `~/.talibulwaqt/store.properties`) and `AppRepository`, the single source of truth exposing `StateFlow`s and persisting every mutation as JSON. A prayer without its own routine inherits `PrayerSlot.ALL`; editing it forks a copy (`updateRoutine`). Daily records are keyed by ISO date and pruned to 90 days.
+- `data/` — `KeyValueStore` (expect; SharedPreferences / NSUserDefaults / `~/.adhan/store.properties`) and `AppRepository`, the single source of truth exposing `StateFlow`s and persisting every mutation as JSON. A prayer without its own routine inherits `PrayerSlot.ALL`; editing it forks a copy (`updateRoutine`). Daily records are keyed by ISO date and pruned to 90 days.
 - `platform/` — service interfaces plus `expect fun create…()` factories (functions, not expect classes): `LocationService`, `CompassService` (true heading; takes lat/lng for declination), `NotificationService` (with `planningHorizonDays`). `NotificationPlanner` turns settings into concrete `PrayerNotification`s and is shared with the Android receivers.
 - `ui/` — `AppViewModel` (ticker, derived schedule/period flows, tasbeeh `SessionState`, reschedules notifications on location/settings changes), `theme/` (NoorSalat palette), `components/`, `screens/` (Prayers, Qibla, Routine, DhikrLibrary, Settings, `SessionOverlay`).
 

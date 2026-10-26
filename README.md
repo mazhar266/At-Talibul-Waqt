@@ -1,4 +1,4 @@
-# TalibulWaqt
+# Adhan
 
 Salat timer, Qibla compass and dhikr companion for Android, iOS and Desktop, built with Kotlin
 Multiplatform and Compose Multiplatform. It is the mobile counterpart of
@@ -40,5 +40,5 @@ Multiplatform and Compose Multiplatform. It is the mobile counterpart of
 - `./gradlew :shared:jvmTest` — engine, Qibla, repository and schedule tests on the JVM
 - `./gradlew :shared:testAndroidHostTest` — the same suite on the Android host JVM
 - `./gradlew :shared:iosSimulatorArm64Test` — on macOS
-- `TALIBULWAQT_SCREENSHOT_DIR=out ./gradlew :shared:jvmTest --tests "*ScreenshotRenderTest*"` renders every
+- `ADHAN_SCREENSHOT_DIR=out ./gradlew :shared:jvmTest --tests "*ScreenshotRenderTest*"` renders every
   screen to PNG without an emulator.

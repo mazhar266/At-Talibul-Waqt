@@ -1,4 +1,4 @@
-# Adhan recordings bundled with TalibulWaqt
+# Adhan recordings bundled with Adhan
 
 Every recording here carries an explicit redistributable licence from its source page, checked
 file by file (not per collection) on 2026-10-16. Recordings by well-known muadhdhins that are
